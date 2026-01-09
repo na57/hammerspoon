@@ -86,6 +86,58 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // GitHub Star and Fork Count Feature
+    function fetchGitHubRepoInfo() {
+        const repoUrl = 'https://api.github.com/repos/na57/hammerspoon';
+        const starsElement = document.getElementById('github-stars');
+        const forksElement = document.getElementById('github-forks');
+        
+        // Set loading state
+        starsElement.textContent = '--';
+        forksElement.textContent = '--';
+        starsElement.classList.add('loading');
+        forksElement.classList.add('loading');
+        
+        fetch(repoUrl, {
+            headers: {
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'Hammerspoon-Config-Guide'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Update with actual data
+            starsElement.textContent = data.stargazers_count.toLocaleString();
+            forksElement.textContent = data.forks_count.toLocaleString();
+            
+            // Remove loading state
+            starsElement.classList.remove('loading', 'error');
+            forksElement.classList.remove('loading', 'error');
+        })
+        .catch(error => {
+            console.error('Error fetching GitHub repo info:', error);
+            
+            // Set error state
+            starsElement.textContent = '?';
+            forksElement.textContent = '?';
+            starsElement.classList.remove('loading');
+            forksElement.classList.remove('loading');
+            starsElement.classList.add('error');
+            forksElement.classList.add('error');
+        });
+    }
+    
+    // Fetch GitHub repo info on page load
+    fetchGitHubRepoInfo();
+    
+    // Refresh GitHub repo info every 5 minutes
+    setInterval(fetchGitHubRepoInfo, 5 * 60 * 1000);
+    
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
     searchInput.placeholder = '搜索内容...';

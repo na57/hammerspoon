@@ -119,7 +119,7 @@ hammerspoon/
 
 - [Hammerspoon 官网](https://www.hammerspoon.org/)
 - [Hammerspoon 文档](https://www.hammerspoon.org/docs/)
-- [GitHub 仓库](https://github.com/Hammerspoon/hammerspoon)
+- [GitHub 仓库](https://github.com/na57/hammerspoon)
 
 ---
 
