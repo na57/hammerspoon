@@ -1,102 +1,14 @@
 -- 设置 Hyper 键（Cmd + Shift + Option）
 local hyper = {"cmd", "shift", "alt"}
 
--- 清除显示器残影的函数
-function clearScreenGhosting(screen)
-    if not screen then
-        screen = hs.screen.mainScreen()
-    end
-    
-    -- 方法1: 强制刷新屏幕
-    screen:invalidate()
-    
-    -- 方法2: 创建临时透明窗口强制重绘
-    local frame = screen:frame()
-    local tempWin = hs.webview.new(frame, {
-        developerExtrasEnabled = false,
-    })
-    tempWin:window():close()
-    
-    -- 方法3: 使用AppleScript刷新窗口服务
-    local refreshScript = [[
-    tell application "System Events"
-        tell application "Dock" to quit
-        delay 0.5
-        tell application "Dock" to activate
-    end tell
-    ]]
-    hs.applescript(refreshScript)
-    
-    -- 方法4: 触发图形系统刷新
-    hs.execute("killall Dock")
-end
+local display = require("display")
 
--- === 显示器切换（支持全屏，防残影） ===
-function moveWindowToNextScreen()
-    local win = hs.window.focusedWindow()
-    if not win then return end
-
-    local currentScreen = win:screen()
-    local allScreens = hs.screen.allScreens()
-    if #allScreens < 2 then return end
-
-    local nextScreen = currentScreen:next()
-    local isFullScreen = win:isFullScreen()
-
-    -- 如果是全屏，先退出全屏
-    if isFullScreen then
-        win:toggleFullScreen()
-        hs.timer.usleep(400000) -- 等待动画完成 (0.4秒)
-    end
-
-    -- 移动到下一屏幕（保持相对位置）
-    win:moveToScreen(nextScreen, false, true)
-
-    -- 强制刷新窗口位置（防止残影）
-    local f = win:frame()
-    win:setFrame(f)
-    hs.timer.doAfter(0.1, function()
-        win:setFrame(f)
-    end)
-
-    -- 强制系统重绘：激活 Finder 再返回
-    local frontApp = hs.application.frontmostApplication()
-    hs.application.launchOrFocus("Finder")
-    hs.timer.doAfter(0.15, function()
-        frontApp:activate()
-        win:focus()
-    end)
-
-    -- 如果原本是全屏，延迟恢复
-    if isFullScreen then
-        hs.timer.doAfter(0.6, function()
-            win:toggleFullScreen()
-            hs.timer.doAfter(0.3, function()
-                win:focus()
-            end)
-        end)
-    end
-end
-
--- 控制台快捷键
 hs.hotkey.bind(hyper, "R", function()
     hs.reload()
 end)
 
--- 显示器切换快捷键（Hyper+M）
-hs.hotkey.bind(hyper, "M", moveWindowToNextScreen)
-
--- 清除所有显示器残影的函数
-function clearAllScreensGhosting()
-    local allScreens = hs.screen.allScreens()
-    for _, screen in ipairs(allScreens) do
-        clearScreenGhosting(screen)
-    end
-    hs.alert.show("已清除所有显示器残影")
-end
-
--- 手动清除残影快捷键（Hyper+G）
-hs.hotkey.bind(hyper, "G", clearAllScreensGhosting)
+hs.hotkey.bind(hyper, "M", display.moveWindowToNextScreen)
+hs.hotkey.bind(hyper, "G", display.clearAllScreensGhosting)
 
 -- 窗口全屏切换函数
 function toggleFullScreen()
