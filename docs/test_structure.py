@@ -6,7 +6,7 @@ import re
 def test_markdown_structure():
     """Test that all required Markdown files exist and have proper structure"""
     
-    base_dir = "/Users/na57/workshop/hammerspoon/docs"
+    base_dir = os.path.dirname(os.path.abspath(__file__))
     sections_dir = os.path.join(base_dir, "_sections")
     
     # Required section files

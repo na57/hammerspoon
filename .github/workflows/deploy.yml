@@ -2,28 +2,74 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ pages ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ pages ]
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
+
+env:
+  BUNDLE_GEMFILE: ./docs/Gemfile
+  BUNDLE_PATH: vendor/bundle
 
 jobs:
-  deploy:
+  build-and-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Ruby environment
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+      
+      - name: Install dependencies
+        run: |
+          cd docs
+          bundle install --jobs 4 --retry 3
+      
+      - name: Run structure tests
+        run: |
+          cd docs
+          python3 test_structure.py
+      
+      - name: Build with Jekyll
+        run: |
+          cd docs
+          bundle exec jekyll build --destination _site
+        env:
+          JEKYLL_ENV: production
+      
+      - name: Verify build output
+        run: |
+          echo "Checking build output directory..."
+          ls -la docs/_site
+          if [ ! -f docs/_site/index.html ]; then
+            echo "Error: index.html not found in build output"
+            exit 1
+          fi
+          echo "Build verification passed!"
+      
+      - name: Set correct file permissions
+        run: |
+          chmod -R 755 docs/_site
+          echo "Set permissions 755 recursively on build output"
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -31,8 +77,53 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './docs'
+          path: './docs/_site'
+          retention-days: 7
       
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+    
+    # Error handling and notifications
+    outputs:
+      deployment_url: ${{ steps.deployment.outputs.page_url }}
+    
+    env:
+      # Add any additional environment variables here
+      NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL || 'noreply@github.com' }}
+      
+  notify:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    if: ${{ failure() || cancelled() }}
+    
+    steps:
+      - name: Notify on failure
+        run: |
+          echo "::error::Deployment failed for commit ${{ github.sha }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit message: ${{ github.event.head_commit.message }}"
+          echo "Author: ${{ github.event.head_commit.author.name }} <${{ github.event.head_commit.author.email }}>"
+        
+      # Optional: Add email notification using SMTP or a service like SendGrid
+      # - name: Send email notification
+      #   uses: dawidd6/action-send-mail@v3
+      #   with:
+      #     server_address: ${{ secrets.SMTP_SERVER }}
+      #     server_port: ${{ secrets.SMTP_PORT }}
+      #     username: ${{ secrets.SMTP_USERNAME }}
+      #     password: ${{ secrets.SMTP_PASSWORD }}
+      #     subject: Deployment failed - ${{ github.repository }}
+      #     body: |
+      #       Deployment failed for commit ${{ github.sha }}
+      #       
+      #       Repository: ${{ github.repository }}
+      #       Branch: ${{ github.ref_name }}
+      #       Commit: ${{ github.sha }}
+      #       Commit message: ${{ github.event.head_commit.message }}
+      #       Author: ${{ github.event.head_commit.author.name }} <${{ github.event.head_commit.author.email }}>
+      #       
+      #       Check the workflow run for details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      #     to: ${{ env.NOTIFICATION_EMAIL }}
+      #     from: GitHub Actions <noreply@github.com>
