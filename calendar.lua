@@ -6,14 +6,8 @@
 
 local calendar = {}
 
--- 配置参数
-local config = {
-    openai_api_key = "", -- 请在这里填写你的OpenAI API密钥
-    openai_api_url = "https://api.openai.com/v1/chat/completions", -- OpenAI API URL
-    model = "gpt-4", -- 使用的模型
-    max_tokens = 500, -- 最大 tokens
-    temperature = 0.1 -- 温度参数，越低越准确
-}
+-- 导入配置文件
+local config = require("config").calendar
 
 -- 创建输入对话框
 local function createInputDialog()
@@ -224,7 +218,7 @@ local function createCalendarEvent(eventData, originalText)
     -- 使用AppleScript创建日历事件（因为Hammerspoon的日历API有限）
     local appleScript = [[
         tell application "Calendar"
-            set newEvent to make new event at end of events of calendar "默认"
+            set newEvent to make new event at end of events of calendar "]] .. config.default_calendar:gsub('"', '\"') .. [["
             set summary of newEvent to "]] .. eventParams.summary:gsub('"', '\"') .. [["\n            set start date of newEvent to date "]] .. hs.date.format(startTime, "%Y-%m-%d %H:%M") .. [["\n            set end date of newEvent to date "]] .. hs.date.format(endTime, "%Y-%m-%d %H:%M") .. [["\n            set description of newEvent to "]] .. eventParams.description:gsub('"', '\"') .. [["\n    ]]
     
     if eventParams.location then
