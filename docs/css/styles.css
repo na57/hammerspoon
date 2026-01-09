@@ -156,7 +156,10 @@ pre code {
 }
 
 .stat-icon {
-    font-size: 1.1rem;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin-right: 2px;
 }
 
 .stat-value {
