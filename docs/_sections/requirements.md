@@ -34,3 +34,5 @@
 
 - 需要管理员权限（首次安装 Hammerspoon 时）
 - 需要登录 iCloud 账户（使用 iCloud 文件移动功能时）
+
+---

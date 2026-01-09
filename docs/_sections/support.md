@@ -36,3 +36,5 @@
 - **电子邮件**：通过 GitHub Issues 提交问题
 - **社交媒体**：关注 Hammerspoon 的官方社交媒体账号
 - **即时通讯**：加入 Hammerspoon 的 Slack 或 Discord 群组
+
+---

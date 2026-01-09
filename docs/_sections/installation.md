@@ -29,3 +29,5 @@
 2. 点击菜单栏中的 Hammerspoon 图标
 3. 选择"Reload Config"选项
 4. 如果配置成功，屏幕上会显示提示："Hammerspoon 配置已加载！"
+
+---
