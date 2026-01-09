@@ -128,7 +128,7 @@ check_dependencies() {
 
 # 获取最新版本信息
 get_latest_release() {
-    print_color "blue" "📥 获取最新版本信息..."
+    print_color "blue" "📥 获取最新版本信息..." >&2
     
     local api_url="https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/releases/latest"
     
@@ -139,16 +139,22 @@ get_latest_release() {
     fi
     
     # 提取版本号和下载链接
-    local version=$(echo "$release_data" | jq -r ".tag_name")
-    local download_url=$(echo "$release_data" | jq -r ".assets[] | select(.name | endswith(".zip")) | .browser_download_url")
+    local version=$(echo "$release_data" | jq -r '.tag_name')
+    local download_url=$(echo "$release_data" | jq -r '.assets[] | select(.name | endswith(".zip")) | .browser_download_url')
     
-    if [ -z "$version" ] || [ -z "$download_url" ]; then
+    # 如果assets中没有zip文件，使用GitHub自动生成的zipball_url
+    if [ -z "$download_url" ] || [ "$download_url" == "null" ]; then
+        download_url=$(echo "$release_data" | jq -r '.zipball_url')
+    fi
+    
+    if [ -z "$version" ] || [ "$version" == "null" ] || [ -z "$download_url" ] || [ "$download_url" == "null" ]; then
         error_exit "无法获取有效的版本信息" "请检查 GitHub Releases 页面是否有可用的发布版本"
     fi
     
-    print_color "green" "✅ 找到最新版本: $version"
-    print_color "yellow" "📦 下载链接: $download_url"
+    print_color "green" "✅ 找到最新版本: $version" >&2
+    print_color "yellow" "📦 下载链接: $download_url" >&2
     
+    # 仅输出版本号和下载链接，不包含其他输出
     echo "$version|$download_url"
 }
 
@@ -157,12 +163,12 @@ download_and_verify() {
     local version=$1
     local download_url=$2
     
-    print_color "blue" "📥 正在下载版本 $version..."
+    print_color "blue" "📥 正在下载版本 $version..." >&2
     
     local zip_file="$DOWNLOAD_DIR/${GITHUB_REPO}-${version}.zip"
     
     # 下载文件
-    if ! curl -L -o "$zip_file" "$download_url"; then
+    if ! curl -L -o "$zip_file" "$download_url" >&2; then
         error_exit "下载失败" "请检查网络连接或稍后重试"
     fi
     
@@ -177,9 +183,9 @@ download_and_verify() {
         error_exit "下载的文件不是有效的zip格式" "请检查 GitHub Releases 页面的文件是否完整"
     fi
     
-    print_color "green" "✅ 文件下载成功并验证通过"
-    print_color "yellow" "📁 文件路径: $zip_file"
-    print_color "yellow" "📊 文件大小: $(du -h "$zip_file" | cut -f1)"
+    print_color "green" "✅ 文件下载成功并验证通过" >&2
+    print_color "yellow" "📁 文件路径: $zip_file" >&2
+    print_color "yellow" "📊 文件大小: $(du -h "$zip_file" | cut -f1)" >&2
     
     echo "$zip_file"
 }

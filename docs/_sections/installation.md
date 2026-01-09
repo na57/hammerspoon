@@ -12,12 +12,12 @@
 
 使用自动化脚本一键安装最新版本：
 ```bash
-curl -fsSL https://raw.githubusercontent.com/na57/hammerspoon/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/na57/hammerspoon/pages/install.sh | bash
 ```
 
 **特殊权限场景：**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/na57/hammerspoon/main/install.sh | sudo bash -s -- -u $(whoami)
+curl -fsSL https://raw.githubusercontent.com/na57/hammerspoon/pages/install.sh | sudo bash -s -- -u $(whoami)
 ```
 
 #### 2. 手动安装（可选）
