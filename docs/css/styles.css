@@ -41,12 +41,23 @@ a:hover {
     text-decoration: underline;
 }
 
+hr {
+    border: none;
+    height: 2px;
+    background-color: var(--border-color);
+    margin: 3rem 0;
+    border-radius: 1px;
+}
+
 code {
-    background-color: #f4f4f4;
-    padding: 0.2em 0.4em;
-    border-radius: 3px;
+    background-color: #e7f3ff;
+    color: #3498db;
+    padding: 0.25em 0.5em;
+    border-radius: 4px;
     font-family: 'Courier New', monospace;
-    font-size: 0.9em;
+    font-size: 0.95em;
+    font-weight: 600;
+    border: 1px solid #b3d7ff;
 }
 
 pre {
