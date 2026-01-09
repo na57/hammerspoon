@@ -5,10 +5,10 @@ author: Your Name
 email: your.email@example.com
 
 # GitHub Pages 设置
-baseurl: ""
-url: "https://yourusername.github.io"
+baseurl: "/hammerspoon"
+url: "https://na57.github.io"
 github:
-  repository_url: https://github.com/yourusername/hammerspoon
+  repository_url: https://github.com/na57/hammerspoon
   repository_name: hammerspoon
 
 # Markdown 设置
