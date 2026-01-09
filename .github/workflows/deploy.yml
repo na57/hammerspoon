@@ -70,10 +70,7 @@ jobs:
           chmod -R 755 docs/_site
           echo "Set permissions 755 recursively on build output"
       
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-        with:
-          enablement: true
+      # Pages配置已移至手动设置，直接上传构建产物
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
