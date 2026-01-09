@@ -40,34 +40,41 @@
         <main class="main-content" role="main">
             <section id="introduction" class="content-section">
                 <h2>项目简介</h2>
-                <p>Hammerspoon 是一款强大的 macOS 自动化工具，允许用户使用 Lua 脚本编写自定义的快捷键和自动化操作。本项目提供了一套精心设计的 Hammerspoon 配置，旨在提高 macOS 用户的工作效率。</p>
-                <p>通过这套配置，您可以轻松实现多显示器管理、窗口控制、文件管理、鼠标自动化等功能，大幅简化日常操作流程。</p>
-                <p><strong>项目目标</strong>：为 macOS 用户提供一套开箱即用、功能完善、易于定制的 Hammerspoon 配置方案。</p>
+                <p><strong></strong>Hammerspoon 自动化配置</strong> 是一个专为 macOS 用户设计的自动化工具集合，通过简单的快捷键组合，让您能够轻松管理显示器、窗口、文件和鼠标等日常操作。</p>
+                <h3>开发背景</h3>
+                <p>在日常使用 Mac 电脑时，我们经常需要重复执行一些操作，比如在多个显示器之间切换窗口、清除屏幕残影、将文件移动到 iCloud 等。这些操作虽然简单，但频繁执行会浪费大量时间。本项目基于 Hammerspoon 框架开发，通过预设的快捷键，一键完成这些操作，大大提高工作效率。</p>
+                <h3>主要目标</h3>
+                <ul>
+                    <li>简化日常操作，减少重复劳动</li>
+                    <li>提高工作效率，让 Mac 使用更加流畅</li>
+                    <li>提供易于自定义的配置方案</li>
+                    <li>适合所有水平的用户使用</li>
+                </ul>
             </section>
 
             <section id="features" class="content-section">
-                <h2>核心功能特点</h2>
+                <h2>✨ 核心功能特点</h2>
                 
                 <div class="feature-card">
                     <h3>1. 🖥️ 显示器智能管理</h3>
-                    <p><strong>功能描述</strong>：支持多显示器环境下的窗口快速切换，同时提供显示器残影清除功能，确保显示效果清晰。</p>
+                    <p><strong>功能描述</strong>：一键在多个显示器之间切换窗口，支持全屏窗口的无缝切换，同时提供清除显示器残影的功能。</p>
                     <p><strong>使用场景</strong>：</p>
                     <ul>
-                        <li>在多个显示器之间快速移动窗口</li>
-                        <li>清除显示器残影，提升显示质量</li>
-                        <li>优化多显示器工作流程</li>
+                        <li>在双显示器或多显示器环境下快速移动窗口</li>
+                        <li>解决显示器切换后出现的屏幕残影问题</li>
+                        <li>保持窗口在不同显示器上的相对位置不变</li>
                     </ul>
-                    <p><strong>快捷键</strong>：<code>Hyper + M</code>（切换窗口到下一显示器）、<code>Hyper + G</code>（清除所有显示器残影）</p>
+                    <p><strong>快捷键</strong>：<code>Hyper + M</code>（切换显示器）、<code>Hyper + G</code>（清除残影,一般用不着,只有再某些版本的系统中切换显示器时会留下残影，才需要使用这个功能）</p>
                 </div>
 
                 <div class="feature-card">
                     <h3>2. 🪟 窗口全屏切换</h3>
-                    <p><strong>功能描述</strong>：一键切换当前窗口的全屏状态，无需使用鼠标操作。</p>
+                    <p><strong>功能描述</strong>：快速切换当前窗口的全屏状态，无需使用鼠标点击窗口控制按钮。</p>
                     <p><strong>使用场景</strong>：</p>
                     <ul>
-                        <li>快速进入专注模式</li>
-                        <li>最大化应用窗口</li>
-                        <li>提高工作专注度</li>
+                        <li>需要专注工作时快速进入全屏模式</li>
+                        <li>在全屏和窗口模式之间快速切换</li>
+                        <li>提升视觉体验和工作专注度</li>
                     </ul>
                     <p><strong>快捷键</strong>：<code>Hyper + P</code></p>
                 </div>
@@ -88,84 +95,87 @@
                         <li>按下 <code>Hyper + 2</code></li>
                         <li>文件会自动移动到 iCloud 的指定目录</li>
                     </ol>
-                    <div class="note-box">
-                        <h4>启用与禁用说明</h4>
-                        <p><strong>启用功能</strong>：</p>
-                        <ol>
-                            <li>打开 <code>/Users/na57/workshop/hammerspoon/icloud.lua</code> 文件</li>
-                            <li>找到 <code>getTargetDirectory()</code> 函数中的路径配置</li>
-                            <li>修改路径为您需要的目标 iCloud 目录</li>
-                            <li>保存文件后，按下 <code>Hyper + R</code> 重新加载配置</li>
-                        </ol>
-                        <p><strong>禁用功能</strong>：</p>
-                        <ol>
-                            <li>打开 <code>/Users/na57/workshop/hammerspoon/init.lua</code> 文件</li>
-                            <li>找到以下代码段：</li>
-                            <pre><code>hs.hotkey.bind(hyper, "2", icloud.moveToICloud)</code></pre>
-                            <li>在该行代码前添加注释符号 <code>--</code>，使其变为：</li>
-                            <pre><code>-- hs.hotkey.bind(hyper, "2", icloud.moveToICloud)</code></pre>
-                            <li>保存文件后，按下 <code>Hyper + R</code> 重新加载配置使更改生效</li>
-                        </ol>
-                    </div>
+                    <p><strong>启用与禁用说明</strong>：</p>
+                    <p><strong>启用功能</strong>：</p>
+                    <ol>
+                        <li>打开 <code>icloud.lua</code> 文件</li>
+                        <li>找到 <code>getTargetDirectory()</code> 函数中的路径配置</li>
+                        <li>修改路径为您需要的目标 iCloud 目录</li>
+                        <li>保存文件后，按下 <code>Hyper + R</code> 重新加载配置</li>
+                    </ol>
+                    <p><strong>禁用功能</strong>：</p>
+                    <ol>
+                        <li>打开 <code>init.lua</code> 文件</li>
+                        <li>找到以下代码段：</li>
+                        <pre><code>hs.hotkey.bind(hyper, "2", icloud.moveToICloud)</code></pre>
+                        <li>在该行代码前添加注释符号 <code>--</code>，使其变为：</li>
+                        <pre><code>-- hs.hotkey.bind(hyper, "2", icloud.moveToICloud)</code></pre>
+                        <li>保存文件后，按下 <code>Hyper + R</code> 重新加载配置使更改生效</li>
+                    </ol>
                 </div>
 
                 <div class="feature-card">
                     <h3>4. 🖱️ 鼠标自动移动</h3>
-                    <p><strong>功能描述</strong>：自动移动鼠标以防止系统休眠，适用于需要长时间运行任务或保持系统活跃的场景。</p>
+                    <p><strong>功能描述</strong>：启动后，鼠标会在屏幕中央区域随机移动，防止电脑进入休眠状态或保持活跃状态。在挂机时特别有用。</p>
                     <p><strong>使用场景</strong>：</p>
                     <ul>
-                        <li>长时间下载文件时防止休眠</li>
-                        <li>运行需要持续活跃的任务</li>
-                        <li>保持在线状态</li>
+                        <li>下载大文件时防止电脑休眠</li>
+                        <li>演示或展示时保持屏幕常亮</li>
+                        <li>需要长时间保持电脑活跃状态</li>
                     </ul>
                     <p><strong>快捷键</strong>：<code>Hyper + 5</code>（启动）、<code>Hyper + 6</code>（停止）</p>
                 </div>
 
                 <div class="feature-card">
                     <h3>5. ⚡ 配置快速重载</h3>
-                    <p><strong>功能描述</strong>：一键重新加载 Hammerspoon 配置，方便在修改配置后立即生效。</p>
+                    <p><strong>功能描述</strong>：修改配置文件后，无需重启 Hammerspoon，一键重新加载配置，立即生效。</p>
                     <p><strong>使用场景</strong>：</p>
                     <ul>
-                        <li>修改配置后快速测试</li>
-                        <li>调试配置文件</li>
-                        <li>应用新的快捷键设置</li>
+                        <li>自定义快捷键后立即应用</li>
+                        <li>修改功能参数后快速生效</li>
+                        <li>调试和测试配置更改</li>
                     </ul>
                     <p><strong>快捷键</strong>：<code>Hyper + R</code></p>
                 </div>
             </section>
 
             <section id="installation" class="content-section">
-                <h2>安装步骤</h2>
+                <h2>🚀 安装步骤</h2>
                 <div class="step-list">
                     <div class="step">
-                        <h3>步骤 1：安装 Hammerspoon</h3>
+                        <h3>第一步：安装 Hammerspoon</h3>
                         <ol>
-                            <li>访问 Hammerspoon 官方网站：<a href="https://www.hammerspoon.org/" target="_blank" rel="noopener noreferrer">https://www.hammerspoon.org/</a></li>
-                            <li>下载最新版本的 Hammerspoon 应用程序</li>
-                            <li>将下载的应用程序拖拽到应用程序文件夹</li>
-                            <li>启动 Hammerspoon 应用程序</li>
+                            <li>打开浏览器，访问 Hammerspoon 官网：<a href="https://www.hammerspoon.org/" target="_blank" rel="noopener noreferrer">https://www.hammerspoon.org/</a></li>
+                            <li>点击页面上的"Download"按钮下载最新版本</li>
+                            <li>下载完成后，双击 <code>.dmg</code> 文件打开安装包</li>
+                            <li>将 Hammerspoon 图标拖拽到"应用程序"文件夹</li>
+                            <li>在"应用程序"文件夹中找到 Hammerspoon 并启动它</li>
                         </ol>
                     </div>
 
                     <div class="step">
-                        <h3>步骤 2：配置文件设置</h3>
+                        <h3>第二步：配置文件设置</h3>
                         <ol>
-                            <li>打开 Hammerspoon 应用程序</li>
+                            <li>启动 Hammerspoon 后，点击菜单栏中的 Hammerspoon 图标（锤子形状）</li>
+                            <li>选择"Open Config"选项，这会打开配置文件所在的文件夹</li>
+                            <li>将本项目的所有文件复制到该文件夹中：</li>
+                            <ul>
+                                <li><code>init.lua</code>（主配置文件）</li>
+                                <li><code>display.lua</code>（显示器管理模块）</li>
+                                <li><code>window.lua</code>（窗口管理模块）</li>
+                                <li><code>icloud.lua</code>（iCloud 文件管理模块）</li>
+                                <li><code>mouse.lua</code>（鼠标控制模块）</li>
+                            </ul>
+                        </ol>
+                    </div>
+
+                    <div class="step">
+                        <h3>第三步：加载配置</h3>
+                        <ol>
+                            <li>确保所有文件都已正确放置在配置文件夹中</li>
                             <li>点击菜单栏中的 Hammerspoon 图标</li>
-                            <li>选择"Preferences"（偏好设置）</li>
-                            <li>在"Config"选项卡中，点击"Open Config"按钮</li>
-                            <li>将本项目的配置文件内容复制到打开的配置文件中</li>
-                            <li>保存配置文件</li>
-                        </ol>
-                    </div>
-
-                    <div class="step">
-                        <h3>步骤 3：加载配置</h3>
-                        <ol>
-                            <li>在 Hammerspoon 菜单栏图标上点击</li>
-                            <li>选择"Reload Config"（重新加载配置）</li>
-                            <li>或者使用快捷键 <code>Hyper + R</code></li>
-                            <li>如果配置成功，您将看到一个提示消息</li>
+                            <li>选择"Reload Config"选项</li>
+                            <li>如果配置成功，屏幕上会显示提示："Hammerspoon 配置已加载！"</li>
                         </ol>
                     </div>
                 </div>
