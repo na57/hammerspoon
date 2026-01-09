@@ -1,0 +1,82 @@
+title: Hammerspoon 配置指南
+description: 提高 macOS 使用效率的自动化工具配置指南
+keywords: Hammerspoon, macOS, 自动化, 快捷键, 配置指南
+author: Your Name
+email: your.email@example.com
+
+# GitHub Pages 设置
+baseurl: ""
+url: "https://yourusername.github.io"
+github:
+  repository_url: https://github.com/yourusername/hammerspoon
+  repository_name: hammerspoon
+
+# Markdown 设置
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: 'highlight'
+    span:
+      line_numbers: false
+    block:
+      line_numbers: true
+      start_line: 1
+
+# 插件
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# 排除文件
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - .gitignore
+  - README.md
+  - deploy.sh
+  - DEPLOYMENT.md
+
+# 包含文件
+include:
+  - _pages
+
+# 默认值
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "default"
+
+# 集合（用于分割的 Markdown 文件）
+collections:
+  sections:
+    output: false
+    permalink: /:collection/:path/
+
+# 页面设置
+permalink: pretty
+
+# 时间戳
+timezone: Asia/Shanghai
+
+# 压缩
+compress_html:
+  clippings: all
+  comments: all
+  endings: all
+  ignore:
+    envs: development

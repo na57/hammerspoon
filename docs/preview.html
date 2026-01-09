@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hammerspoon 配置指南 - 内容预览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px solid #eee;
+            margin: 30px 0;
+        }
+
+        .section-divider {
+            border-top: 3px solid #3498db;
+            margin: 40px 0;
+        }
+
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-message">
+            <strong>✓ 内容管理系统测试成功！</strong>
+            <p>所有 Markdown 文件已正确创建并集成到主文档中。</p>
+        </div>
+
+        <div class="info-box">
+            <strong>📝 文件结构：</strong>
+            <ul>
+                <li><code>index.md</code> - 主文档文件，包含所有章节的引用</li>
+                <li><code>_sections/features.md</code> - 核心功能特点</li>
+                <li><code>_sections/installation.md</code> - 安装步骤</li>
+                <li><code>_sections/usage.md</code> - 使用方法</li>
+                <li><code>_sections/requirements.md</code> - 系统要求</li>
+                <li><code>_sections/faq.md</code> - 常见问题解答</li>
+                <li><code>_sections/support.md</code> - 技术支持</li>
+                <li><code>_sections/changelog.md</code> - 更新日志</li>
+                <li><code>_sections/license.md</code> - 许可证</li>
+            </ul>
+        </div>
+
+        <h1>Hammerspoon 配置指南</h1>
+
+        <h2>✨ 核心功能特点</h2>
+        <p>本配置提供了以下核心功能：</p>
+        <ul>
+            <li>🖥️ 显示器智能管理 - 一键在多个显示器之间切换窗口</li>
+            <li>🪟 窗口全屏切换 - 快速切换当前窗口的全屏状态</li>
+            <li>☁️ iCloud 文件快速移动 - 将文件一键移动到 iCloud 指定目录</li>
+            <li>🖱️ 鼠标自动移动 - 防止电脑进入休眠状态</li>
+            <li>⚡ 配置快速重载 - 一键重新加载配置</li>
+        </ul>
+
+        <div class="section-divider"></div>
+
+        <h2>🚀 使用方法</h2>
+        <p>所有功能都通过"Hyper 键 + 字母键"的组合来触发：</p>
+        <p><strong>Hyper 键</strong> = <code>Command (⌘)</code> + <code>Shift (⇧)</code> + <code>Option (⌥)</code></p>
+
+        <h3>常用快捷键：</h3>
+        <ul>
+            <li><code>Hyper + M</code> - 切换显示器</li>
+            <li><code>Hyper + P</code> - 切换窗口全屏</li>
+            <li><code>Hyper + 2</code> - 移动文件到 iCloud</li>
+            <li><code>Hyper + 5</code> - 启动鼠标移动</li>
+            <li><code>Hyper + 6</code> - 停止鼠标移动</li>
+            <li><code>Hyper + R</code> - 重新加载配置</li>
+        </ul>
+
+        <div class="section-divider"></div>
+
+        <h2>💻 系统要求</h2>
+        <ul>
+            <li>macOS 10.10 (Yosemite) 或更高版本</li>
+            <li>Hammerspoon 0.9.70 或更高版本</li>
+            <li>建议至少 4GB 内存</li>
+            <li>支持多显示器（可选）</li>
+        </ul>
+
+        <div class="section-divider"></div>
+
+        <h2>📄 许可证</h2>
+        <p>本项目基于 MIT 许可证开源，您可以自由使用、修改和分发。</p>
+
+        <hr>
+
+        <div class="info-box">
+            <strong>🎉 内容管理系统优势：</strong>
+            <ul>
+                <li>✓ 内容只需维护一次，自动同步到所有页面</li>
+                <li>✓ 支持模块化内容组织，易于管理</li>
+                <li>✓ 使用 Markdown 格式，易于编辑和版本控制</li>
+                <li>✓ 支持自动构建和部署流程</li>
+                <li>✓ 内容修改后自动更新，无需手动编辑 HTML</li>
+            </ul>
+        </div>
+
+        <p style="text-align: center; margin-top: 40px; color: #7f8c8d;">
+            <strong>祝您使用愉快！</strong> 🎉
+        </p>
+    </div>
+</body>
+</html>

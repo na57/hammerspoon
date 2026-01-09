@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{{ page.description | default: site.description | escape }}">
+  <meta name="keywords" content="{{ page.keywords | default: site.keywords | escape }}">
+  <title>{% if page.title %}{{ page.title | escape }} | {% endif %}{{ site.title | escape }}</title>
+  
+  <link rel="stylesheet" href="{{ '/assets/css/styles.css' | relative_url }}">
+  
+  {% if page.canonical_url %}
+  <link rel="canonical" href="{{ page.canonical_url }}">
+  {% endif %}
+</head>
+<body>
+  <nav class="navbar" role="navigation" aria-label="主导航">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <a href="{{ '/' | relative_url }}">
+          <h1>{{ site.title }}</h1>
+        </a>
+      </div>
+      <button class="nav-toggle" aria-label="切换导航菜单" aria-expanded="false">
+        <span class="hamburger"></span>
+        <span class="hamburger"></span>
+        <span class="hamburger"></span>
+      </button>
+    </div>
+  </nav>
+
+  {{ content }}
+
+  <footer class="page-footer">
+    <p>&copy; {{ site.time | date: "%Y" }} {{ site.title }}. 保留所有权利。</p>
+    <p>{{ site.footer_text | default: "本配置基于 Hammerspoon 开源项目，遵循相应的开源许可证。" }}</p>
+  </footer>
+</body>
+</html>
