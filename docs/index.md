@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Hammerspoon 配置指南
+title: na57 的 Hammerspoon 配置指南
 ---
 
 # Hammerspoon 自动化配置
