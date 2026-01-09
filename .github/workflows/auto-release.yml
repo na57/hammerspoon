@@ -1,0 +1,78 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - release
+  pull_request:
+    branches:
+      - release
+    types:
+      - closed
+
+jobs:
+  create-release:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/release') || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set release version with conflict handling
+        id: set-version
+        run: |
+          BASE_VERSION=$(date +"%Y.%m.%d")
+          VERSION=$BASE_VERSION
+          
+          # Check if tag already exists, if yes, increment with patch version
+          COUNTER=1
+          while git tag -l | grep -q "^$VERSION$"; do
+            VERSION="$BASE_VERSION.$COUNTER"
+            COUNTER=$((COUNTER + 1))
+          done
+          
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Generate changelog
+        id: generate-changelog
+        run: |
+          # Get all tags and sort them
+          ALL_TAGS=$(git tag -l | sort -V)
+          
+          # Get previous tag if exists
+          PREVIOUS_TAG=$(echo "$ALL_TAGS" | grep -B 1 "${{ steps.set-version.outputs.VERSION }}" | head -1)
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # No previous tags, get all commits
+            CHANGELOG=$(git log --pretty="* %h %s by %an" --no-merges)
+          else
+            # Get commits since previous tag
+            CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty="* %h %s by %an" --no-merges)
+          fi
+          
+          # Get all issues using GitHub API
+          ISSUES=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/issues?state=all&per_page=100" \
+            | jq -r '.[] | "* #\(.number) \(.title) - \(.state)"')
+          
+          # Create release body with proper formatting
+          RELEASE_BODY="# Release ${{ steps.set-version.outputs.VERSION }}\n\n## Changelog\n\n$CHANGELOG\n\n## All Issues\n\n$ISSUES"
+          
+          echo "RELEASE_BODY<<EOF" >> $GITHUB_OUTPUT
+          echo "$RELEASE_BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.set-version.outputs.VERSION }}
+          name: Release ${{ steps.set-version.outputs.VERSION }}
+          body: ${{ steps.generate-changelog.outputs.RELEASE_BODY }}
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
