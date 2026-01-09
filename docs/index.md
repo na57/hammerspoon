@@ -1,3 +1,8 @@
+---
+layout: main
+title: Hammerspoon 配置指南
+---
+
 # Hammerspoon 自动化配置
 
 ## 📖 项目简介
