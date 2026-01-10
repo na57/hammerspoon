@@ -9,51 +9,47 @@ local calendar = {}
 -- 导入配置文件
 local config = require("config").calendar
 
--- 创建输入对话框
-local function createInputDialog()
-    -- 正确的hs.dialog.textPrompt签名：title, message, defaultText, button1, button2, informativeText, secure
-    -- 这里我们使用正确的参数顺序和类型
-    -- hs.dialog.textPrompt返回一个表，包含按钮和文本信息
-    local dialog = hs.dialog.textPrompt(
-        "创建日历事件", -- 标题
-        "请输入包含日程信息的文本（例如：明天下午3点到5点开会，讨论项目进度，地点在会议室A）", -- 消息
-        "", -- 默认文本
-        "确认", -- 确认按钮
-        "取消" -- 取消按钮
-        -- 注意：这里我们不传递第6个参数，或者根据需要传递informativeText或secure参数
-    )
-    
-    -- 处理对话框结果
-    if dialog.buttonPressed == "确认" and dialog.textClicked ~= "" then
-        -- 处理输入文本
-        processCalendarText(dialog.textClicked)
-    end
-    
-    -- 设置对话框样式
-    dialog:style(hs.dialog.style.default)
-    return dialog
-end
-
 -- 显示加载状态
 local function showLoading(show)
+    -- 先关闭旧的提示，避免重复
+    if calendar.loadingAlertID then
+        -- 使用hs.alert.closeSpecific关闭特定提示
+        hs.alert.closeSpecific(calendar.loadingAlertID)
+        calendar.loadingAlertID = nil
+    end
+    
     if show then
-        calendar.loadingAlert = hs.alert.show("正在处理，请稍候...", "informational")
-    else
-        if calendar.loadingAlert then
-            calendar.loadingAlert:withdraw()
-            calendar.loadingAlert = nil
-        end
+        -- 显示新的加载提示
+        -- 正确参数顺序：hs.alert.show(str, [style], [screen], [seconds])
+        -- 第四个参数才是显示时间（秒）
+        calendar.loadingAlertID = hs.alert.show(
+            "正在处理，请稍候...", -- str
+            "informational", -- style
+            nil, -- screen (nil表示使用主屏幕)
+            3 -- seconds (显示3秒后自动消失)
+        )
     end
 end
 
 -- 显示结果提示
 local function showResult(message, isSuccess)
+    -- 确保message是字符串类型
+    if type(message) ~= "string" then
+        message = tostring(message)
+    end
+    
+    -- 简化调用，只使用前两个参数
+    -- hs.alert.show的正确用法：hs.alert.show(message, [style])
+    -- 移除第三个参数，避免类型错误
     local style = isSuccess and "success" or "critical"
-    hs.alert.show(message, style, 3)
+    hs.alert.show(message, style, nil, 3)
 end
 
 -- 调用OpenAI API提取日程信息
 local function callOpenAIAPI(text, callback)
+    -- 调试信息：打印函数调用
+    print("[调试] 进入callOpenAIAPI函数")
+    
     -- 构建请求体
     local requestBody = {
         model = config.model,
@@ -71,6 +67,11 @@ local function callOpenAIAPI(text, callback)
         temperature = config.temperature
     }
     
+    -- 标记请求是否已完成
+    local requestCompleted = false
+    -- 定义超时计时器变量，作用域为整个函数
+    local timeoutTimer = nil
+    
     -- 构建HTTP请求
     local request = hs.http.asyncPost(
         config.openai_api_url,
@@ -79,32 +80,75 @@ local function callOpenAIAPI(text, callback)
             Authorization = "Bearer " .. config.openai_api_key,
             ["Content-Type"] = "application/json"
         },
-        function(status, response)
+        function(status, response)    
+            -- 检查请求是否已经完成
+            if requestCompleted then
+                print("[调试] 请求已完成，忽略重复回调")
+                return
+            end
+            
+            -- 标记请求已完成
+            requestCompleted = true
+            
+            -- 取消超时计时器
+            if timeoutTimer then
+                timeoutTimer:stop()
+                timeoutTimer = nil
+            end
+            
+            -- 显示加载状态
             showLoading(false)
+            
+            -- 调试信息：打印请求状态和响应
+            print("[调试] API请求状态码:", status)
+            print("[调试] API响应内容:", response)
             
             if status == 200 then
                 -- 解析API响应
                 local success, data = pcall(hs.json.decode, response)
-                if success and data.choices and #data.choices > 0 then
-                    local message = data.choices[1].message.content
-                    local success, eventData = pcall(hs.json.decode, message)
-                    if success then
-                        callback(true, eventData)
+                if success then
+                    print("[调试] 解析API响应成功")
+                    if data.choices and #data.choices > 0 then
+                        local message = data.choices[1].message.content
+                        print("[调试] 提取的消息内容:", message)
+                        local success, eventData = pcall(hs.json.decode, message)
+                        if success then
+                            print("[调试] 解析日程信息成功")
+                            callback(true, eventData)
+                        else
+                            print("[调试] 解析日程信息失败")
+                            callback(false, "无法解析API返回的日程信息")
+                        end
                     else
-                        callback(false, "无法解析API返回的日程信息")
+                        print("[调试] API返回格式错误，缺少choices字段")
+                        callback(false, "API返回格式错误")
                     end
                 else
-                    callback(false, "API返回格式错误")
+                    print("[调试] 解析API响应失败")
+                    callback(false, "无法解析API响应")
                 end
             else
+                print("[调试] API请求失败，状态码:", status)
                 callback(false, "API调用失败，状态码：" .. status)
             end
         end
     )
     
     -- 超时处理
-    hs.timer.doAfter(5, function()
+    timeoutTimer = hs.timer.doAfter(5, function()
+        -- 检查请求是否已经完成
+        if requestCompleted then
+            print("[调试] 请求已完成，忽略超时回调")
+            return
+        end
+        
+        -- 标记请求已完成
+        requestCompleted = true
+        
+        -- 显示加载状态
         showLoading(false)
+        
+        print("[调试] API请求超时")
         callback(false, "API调用超时，请重试")
     end)
     
@@ -244,10 +288,23 @@ end
 
 -- 处理日历文本
 local function processCalendarText(text)
+    -- 调试信息：打印函数调用
+    print("[调试] 进入processCalendarText函数")
+    print("[调试] 输入文本:", text)
+    
     -- 显示加载状态
     showLoading(true)
     
+    -- 检查API密钥是否配置
+    if config.openai_api_key == "" or config.openai_api_key == nil then
+        showLoading(false)
+        print("[调试] API密钥未配置")
+        showResult("请先在config.lua中配置OpenAI API密钥", false)
+        return
+    end
+    
     -- 调用API提取日程信息
+    print("[调试] 调用callOpenAIAPI函数")
     callOpenAIAPI(text, function(success, data)
         if success then
             -- 创建日历事件
@@ -255,23 +312,42 @@ local function processCalendarText(text)
         else
             -- 显示错误信息
             showResult(data, false)
-            
-            -- 提供手动编辑选项
-            hs.dialog.textPrompt(
-                "API调用失败",
-                "无法自动提取日程信息，请手动输入或修改。\n错误信息：" .. data .. "\n\n原始文本：" .. text,
-                "",
-                "确认",
-                "取消",
-                function(button, manualText)
-                    if button == "确认" and manualText ~= "" then
-                        -- 这里可以实现手动创建日历事件的逻辑
-                        showResult("手动创建功能尚未实现", false)
-                    end
-                end
-            )
         end
     end)
+end
+
+-- 创建输入对话框
+local function createInputDialog()
+    -- 使用hs.dialog.textPrompt创建阻塞对话框
+    -- 正确用法：buttonPressed, textClicked = hs.dialog.textPrompt(title, message, defaultText, button1, button2)
+    local buttonPressed, textClicked = hs.dialog.textPrompt(
+        "创建日历事件", -- 标题
+        "请输入包含日程信息的文本（例如：明天下午3点到5点开会，讨论项目进度，地点在会议室A）", -- 消息
+        "", -- 默认文本
+        "确认", -- button1 (主要按钮)
+        "取消" -- button2 (次要按钮)
+    )
+    
+    -- 调试信息：打印对话框返回结果
+    print("[调试] 对话框返回结果:")
+    print("[调试] buttonPressed:", buttonPressed)
+    print("[调试] textClicked:", textClicked)
+    
+    -- 处理对话框结果
+    if buttonPressed == "确认" then
+        if textClicked and textClicked ~= "" then
+            -- 处理输入文本
+            print("[调试] 调用processCalendarText函数处理文本")
+            processCalendarText(textClicked)
+        else
+            print("[调试] 输入文本为空，不处理")
+            hs.alert.show("请输入日程信息", "warning", 2)
+        end
+    else
+        print("[调试] 用户点击了取消按钮或关闭了对话框")
+    end
+    
+    return
 end
 
 -- 触发文本输入对话框
@@ -283,6 +359,11 @@ end
 function calendar.init()
     -- 这里可以添加初始化代码
     print("日历日程创建功能已初始化")
+end
+
+-- 测试专用函数：暴露processCalendarText用于测试
+function calendar.testProcessText(text)
+    processCalendarText(text)
 end
 
 return calendar

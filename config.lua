@@ -8,10 +8,10 @@ local config = {}
 
 -- 日历模块配置
 config.calendar = {
-    openai_api_key = "", -- 请在这里填写你的OpenAI API密钥
-    openai_api_url = "https://api.openai.com/v1/chat/completions", -- OpenAI API URL
-    model = "gpt-4", -- 使用的模型
-    max_tokens = 500, -- 最大 tokens
+    openai_api_key = "0cb4aa30-0b1c-451c-8002-893b1727bbac", -- 请在这里填写你的OpenAI API密钥
+    openai_api_url = "https://ark.cn-beijing.volces.com/api/v3", -- OpenAI API URL
+    model = "doubao-seed-code-preview-251028", -- 使用的模型
+    max_tokens = 4096, -- 最大 tokens
     temperature = 0.1, -- 温度参数，越低越准确
     default_calendar = "默认", -- 默认日历名称
     time_zone = "Asia/Shanghai" -- 时区设置
