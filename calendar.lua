@@ -203,23 +203,21 @@ local function createCalendarEvent(eventData, originalText)
     }
     
     -- 使用AppleScript创建日历事件（因为Hammerspoon的日历API有限）
-    local appleScript = "tell application \"Calendar\"\n"
-    
-    -- 逐个添加命令，确保每个命令都在单独的行上
-    appleScript = appleScript .. "        set newEvent to make new event at end of events of calendar \"" .. escapeAppleScriptString(config.default_calendar) .. "\"\n"
-    appleScript = appleScript .. "        set summary of newEvent to \"" .. escapeAppleScriptString(eventParams.summary) .. "\"\n"
-    appleScript = appleScript .. "        set start date of newEvent to date \"" .. escapeAppleScriptString(startTimeStr) .. "\"\n"
-    appleScript = appleScript .. "        set end date of newEvent to date \"" .. escapeAppleScriptString(endTimeStr) .. "\"\n"
-    appleScript = appleScript .. "        set description of newEvent to \"" .. escapeAppleScriptString(eventParams.description) .. "\"\n"
+    -- 构建单行AppleScript，避免多行格式问题
+    local baseScript = "tell application \"Calendar\" to make new event at end of events of first calendar with properties {"
+    local properties = {
+        "summary:\"" .. escapeAppleScriptString(eventParams.summary) .. "\"",
+        "start date:date \"" .. escapeAppleScriptString(startTimeStr) .. "\"",
+        "end date:date \"" .. escapeAppleScriptString(endTimeStr) .. "\"",
+        "description:\"" .. escapeAppleScriptString(eventParams.description) .. "\""
+    }
     
     -- 添加location（如果有）
     if eventParams.location then
-        appleScript = appleScript .. "        set location of newEvent to \"" .. escapeAppleScriptString(eventParams.location) .. "\"\n"
+        table.insert(properties, "location:\"" .. escapeAppleScriptString(eventParams.location) .. "\"")
     end
     
-    -- 添加save命令和结束语句
-    appleScript = appleScript .. "        save newEvent\n"
-    appleScript = appleScript .. "    end tell"
+    local appleScript = baseScript .. table.concat(properties, ", ") .. "}"
     
     -- 调试信息：打印生成的 AppleScript
     print("[调试] 生成的 AppleScript:")
@@ -241,12 +239,14 @@ local function createCalendarEvent(eventData, originalText)
         f:write(appleScript)
         f:close()
         
-        local cmd = 'osascript "' .. tempFile .. '" 2>&1'
+        local cmd = 'osascript "' .. tempFile .. '"'
         local handle = io.popen(cmd)
         local output = handle:read("*a")
         local exitCode = handle:close()
         
-        if exitCode == 0 then
+        -- 在 Lua 中，io.popen 的 close() 方法返回 true 表示成功
+        if exitCode then
+            print("[调试] AppleScript 执行成功，返回值:", output)
             showResult("日历事件创建成功", true)
             return true
         else
