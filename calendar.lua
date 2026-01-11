@@ -142,7 +142,7 @@ local function callOpenAIAPI(text, callback)
     )
     
     -- 超时处理
-    timeoutTimer = hs.timer.doAfter(5, function()
+    timeoutTimer = hs.timer.doAfter(30, function()
         -- 检查请求是否已经完成
         if requestCompleted then
             print("[调试] 请求已完成，忽略超时回调")
