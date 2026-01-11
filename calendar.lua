@@ -20,14 +20,16 @@ local function showLoading(show)
     
     if show then
         -- 显示新的加载提示
-        -- 正确参数顺序：hs.alert.show(str, [style], [screen], [seconds])
-        -- 第四个参数才是显示时间（秒）
-        calendar.loadingAlertID = hs.alert.show(
-            "正在处理，请稍候...", -- str
-            "informational", -- style
-            nil, -- screen (nil表示使用主屏幕)
-            3 -- seconds (显示3秒后自动消失)
-        )
+        -- 使用定时器在3秒后关闭提示
+        calendar.loadingAlertID = hs.alert.show("正在处理，请稍候...", "informational")
+        
+        -- 3秒后自动关闭
+        hs.timer.doAfter(3, function()
+            if calendar.loadingAlertID then
+                hs.alert.closeSpecific(calendar.loadingAlertID)
+                calendar.loadingAlertID = nil
+            end
+        end)
     end
 end
 
@@ -38,11 +40,16 @@ local function showResult(message, isSuccess)
         message = tostring(message)
     end
     
-    -- 简化调用，只使用前两个参数
-    -- hs.alert.show的正确用法：hs.alert.show(message, [style])
-    -- 移除第三个参数，避免类型错误
+    -- hs.alert.show的正确用法：hs.alert.show(str, [style], [screen], [seconds])
+    -- 参数顺序：message, style, screen, seconds
+    -- 注意：seconds参数可能不起作用，需要使用定时器手动关闭
     local style = isSuccess and "success" or "critical"
-    hs.alert.show(message, style, nil, 3)
+    local alertID = hs.alert.show(message, style)
+    
+    -- 使用定时器在3秒后关闭提示
+    hs.timer.doAfter(3, function()
+        hs.alert.closeSpecific(alertID)
+    end)
 end
 
 -- 调用OpenAI API提取日程信息
@@ -341,7 +348,12 @@ local function createInputDialog()
             processCalendarText(textClicked)
         else
             print("[调试] 输入文本为空，不处理")
-            hs.alert.show("请输入日程信息", "warning", 2)
+            local alertID = hs.alert.show("请输入日程信息", "warning")
+            
+            -- 2秒后自动关闭
+            hs.timer.doAfter(2, function()
+                hs.alert.closeSpecific(alertID)
+            end)
         end
     else
         print("[调试] 用户点击了取消按钮或关闭了对话框")
