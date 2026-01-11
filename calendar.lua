@@ -63,60 +63,7 @@ local function callOpenAIAPI(text, callback)
         messages = {
             {
                 role = "system",
-                content = [[你是一个专业的日历日程信息提取助手。请从用户输入的文本中提取关键日程信息，并以JSON格式返回。
-
-【JSON字段要求】
-{
-  "title": "事件标题（简洁明确，仅包含核心行动内容）",
-  "time": "开始时间，格式YYYY-MM-DD HH:MM（24小时制）",
-  "duration": "持续时间，格式如'1小时'、'30分钟'、'2小时30分钟'",
-  "location": "事件地点",
-  "attendees": ["参与人员姓名数组"],
-  "description": "事件详细描述"
-}
-
-【事件标题提取规则】
-- 仅提取核心行动内容，去除冗余修饰词和无关信息
-- 标题应简洁明了，准确反映"需要执行的具体事项"
-- 示例：
-  * "明天下午3点和张三开会讨论项目进度" → "和张三开会讨论项目进度"
-  * "下周二上午10点在会议室A参加产品评审会议" → "参加产品评审会议"
-  * "周五下午2点去健身房锻炼" → "去健身房锻炼"
-
-【开始时间处理规则】
-- 优先提取文本中明确提及的时间信息
-- 对于相对日期（如"明天"、"下周一"），转换为具体日期（YYYY-MM-DD格式）
-- 时间使用24小时制HH:MM格式
-- 当文本未明确提及具体时间点时，按以下规则智能推测：
-  * 会议、工作相关事件：默认上午9:00
-  * 休闲、娱乐、运动等事件：默认下午14:00
-  * 用餐相关事件：默认中午12:00或晚上18:00
-  * 无法判断类型时：默认上午9:00
-
-【持续时间处理规则】
-- 优先提取文本中明确提及的持续时间
-- 当文本未明确提及持续时间时，按以下规则智能推测：
-  * 会议：默认1小时
-  * 面试：默认1小时
-  * 培训/课程：默认2小时
-  * 运动/健身：默认1小时
-  * 用餐：默认1小时
-  * 其他事件：默认1小时
-
-【参与人员提取规则】
-- 仅提取文本中明确出现的真实人员姓名
-- 排除职位、称谓等非姓名信息（如"经理"、"老师"、"医生"等）
-- 支持提取多个参与人员姓名，以数组形式返回
-- 若文本未提及任何人员信息，返回null
-- 示例：
-  * "和张三、李四开会" → ["张三", "李四"]
-  * "和经理开会" → null（"经理"是职位，不是姓名）
-  * "和王老师讨论" → null（"老师"是称谓，不是姓名）
-
-【其他注意事项】
-- 确保返回的JSON格式正确，不包含任何额外的文本
-- 如果没有提取到某些信息，对应字段返回null
-- location字段：提取文本中明确提到的地点信息]]
+                content = config.system_prompt:gsub("{time_zone}", config.time_zone)
             },
             {
                 role = "user",
@@ -217,99 +164,31 @@ end
 
 -- 创建日历事件
 local function createCalendarEvent(eventData, originalText)
-    -- 解析日期和时间
-    local function parseDateTime(dateStr, timeStr)
-        if not dateStr then return nil end
-        
-        -- 尝试解析日期
-        local date = hs.date.parse(dateStr)
-        if not date then
-            -- 尝试其他日期格式
-            local formats = {
-                "%Y-%m-%d",
-                "%Y/%m/%d",
-                "%m/%d/%Y",
-                "%d/%m/%Y"
-            }
-            
-            for _, fmt in ipairs(formats) do
-                date = hs.date.parse(dateStr, fmt)
-                if date then break end
-            end
-        end
-        
-        if not date then return nil end
-        
-        -- 如果有时间，添加时间信息
-        if timeStr then
-            local timePattern = "(%d+):(%d+)" -- 匹配HH:MM格式
-            local hour, min = timeStr:match(timePattern)
-            if hour and min then
-                -- 设置时间
-                date = hs.date.copy(date)
-                date = hs.date.setHours(date, tonumber(hour))
-                date = hs.date.setMinutes(date, tonumber(min))
-            else
-                -- 尝试匹配其他时间格式，如"下午3点"或"3pm"
-                local timePattern2 = "(%d+)[点|时]?" -- 匹配"3点"或"3时"或"3"
-                local hour2 = timeStr:match(timePattern2)
-                if hour2 then
-                    hour2 = tonumber(hour2)
-                    -- 检查是否是下午
-                    if timeStr:find("下午") or timeStr:find("pm") or timeStr:find("PM") then
-                        if hour2 < 12 then
-                            hour2 = hour2 + 12
-                        end
-                    elseif timeStr:find("上午") or timeStr:find("am") or timeStr:find("AM") then
-                        if hour2 == 12 then
-                            hour2 = 0
-                        end
-                    end
-                    date = hs.date.copy(date)
-                    date = hs.date.setHours(date, hour2)
-                    date = hs.date.setMinutes(date, 0)
-                end
-            end
-        end
-        
-        return date
+    -- 格式化日期时间字符串（用于AppleScript）
+    local function formatDateTime(timestamp)
+        -- 使用标准日期格式：YYYY-MM-DD HH:MM:SS
+        return os.date("%Y-%m-%d %H:%M:%S", timestamp)
     end
     
-    -- 解析开始时间
-    local startTime = parseDateTime(eventData.time, eventData.time)
-    if not startTime then
+    -- 转义 AppleScript 字符串
+    local function escapeAppleScriptString(str)
+        if not str then return "" end
+        -- 转义特殊字符
+        str = str:gsub("\\", "\\\\")  -- 反斜杠
+        str = str:gsub('"', '\\"')    -- 双引号
+        str = str:gsub("\n", "\\n")   -- 换行符
+        str = str:gsub("\r", "\\r")   -- 回车符
+        str = str:gsub("\t", "\\t")   -- 制表符
+        return str
+    end
+    
+    -- 验证时间戳
+    local startTime = tonumber(eventData.start_time)
+    local endTime = tonumber(eventData.end_time)
+    
+    if not startTime or not endTime then
         showResult("无法解析事件时间", false)
         return false
-    end
-    
-    -- 计算结束时间
-    local endTime
-    if eventData.duration then
-        -- 解析持续时间（格式如：1小时，30分钟，2h30m等）
-        local duration = eventData.duration
-        local hours = 0
-        local minutes = 0
-        
-        -- 提取小时
-        local hourMatch = duration:match("(%d+)小时") or duration:match("(%d+)h")
-        if hourMatch then
-            hours = tonumber(hourMatch)
-        end
-        
-        -- 提取分钟
-        local minMatch = duration:match("(%d+)分钟") or duration:match("(%d+)m")
-        if minMatch then
-            minutes = tonumber(minMatch)
-        end
-        
-        -- 计算结束时间
-        endTime = hs.date.copy(startTime)
-        endTime = hs.date.setHours(endTime, hs.date.getHours(endTime) + hours)
-        endTime = hs.date.setMinutes(endTime, hs.date.getMinutes(endTime) + minutes)
-    else
-        -- 默认持续1小时
-        endTime = hs.date.copy(startTime)
-        endTime = hs.date.setHours(endTime, hs.date.getHours(endTime) + 1)
     end
     
     -- 构建日历事件参数
@@ -320,20 +199,19 @@ local function createCalendarEvent(eventData, originalText)
     }
     
     -- 使用AppleScript创建日历事件（因为Hammerspoon的日历API有限）
-    local appleScript = [[
-        tell application "Calendar"
-            set newEvent to make new event at end of events of calendar "]] .. config.default_calendar:gsub('"', '\"') .. [["
-            set summary of newEvent to "]] .. eventParams.summary:gsub('"', '\"') .. [["\n            set start date of newEvent to date "]] .. hs.date.format(startTime, "%Y-%m-%d %H:%M") .. [["\n            set end date of newEvent to date "]] .. hs.date.format(endTime, "%Y-%m-%d %H:%M") .. [["\n            set description of newEvent to "]] .. eventParams.description:gsub('"', '\"') .. [["\n    ]]
+    local appleScript = 'tell application "Calendar"\n'
+    appleScript = appleScript .. 'set newEvent to make new event at end of events of calendar "' .. escapeAppleScriptString(config.default_calendar) .. '"\n'
+    appleScript = appleScript .. 'set summary of newEvent to "' .. escapeAppleScriptString(eventParams.summary) .. '"\n'
+    appleScript = appleScript .. 'set start date of newEvent to date "' .. escapeAppleScriptString(formatDateTime(startTime)) .. '"\n'
+    appleScript = appleScript .. 'set end date of newEvent to date "' .. escapeAppleScriptString(formatDateTime(endTime)) .. '"\n'
+    appleScript = appleScript .. 'set description of newEvent to "' .. escapeAppleScriptString(eventParams.description) .. '"\n'
     
     if eventParams.location then
-        appleScript = appleScript .. [[
-            set location of newEvent to "]] .. eventParams.location:gsub('"', '\"') .. [["\n        ]]
+        appleScript = appleScript .. 'set location of newEvent to "' .. escapeAppleScriptString(eventParams.location) .. '"\n'
     end
     
-    appleScript = appleScript .. [[
-            save newEvent
-        end tell
-    ]]
+    appleScript = appleScript .. 'save newEvent\n'
+    appleScript = appleScript .. 'end tell'
     
     -- 执行AppleScript
     local success, result = hs.applescript(appleScript)
@@ -341,7 +219,8 @@ local function createCalendarEvent(eventData, originalText)
         showResult("日历事件创建成功", true)
         return true
     else
-        showResult("日历事件创建失败：" .. result, false)
+        local errorMsg = result or "未知错误"
+        showResult("日历事件创建失败：" .. errorMsg, false)
         return false
     end
 end

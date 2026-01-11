@@ -15,7 +15,7 @@ local testCases = {
             title = "和张三开会讨论项目进度",
             time = "上午9:00",
             duration = "1小时",
-            attendees = ["张三"]
+            attendees = {"张三"}
         }
     },
     {
@@ -25,7 +25,7 @@ local testCases = {
             title = "去健身房锻炼",
             time = "下午14:00",
             duration = "1小时",
-            attendees = null
+            attendees = nil
         }
     },
     {
@@ -35,7 +35,7 @@ local testCases = {
             title = "参加技术面试",
             time = "上午9:00",
             duration = "1小时",
-            attendees = null
+            attendees = nil
         }
     },
     {
@@ -45,7 +45,7 @@ local testCases = {
             title = "参加产品培训课程",
             time = "上午9:00",
             duration = "2小时",
-            attendees = null
+            attendees = nil
         }
     },
     {
@@ -55,7 +55,7 @@ local testCases = {
             title = "和同事一起吃饭",
             time = "中午12:00",
             duration = "1小时",
-            attendees = null
+            attendees = nil
         }
     },
     {
@@ -65,7 +65,7 @@ local testCases = {
             title = "和张三、李四、王五开会",
             time = "15:00",
             duration = "1小时",
-            attendees = ["张三", "李四", "王五"]
+            attendees = {"张三", "李四", "王五"}
         }
     },
     {
@@ -75,7 +75,7 @@ local testCases = {
             title = "和经理开会讨论工作",
             time = "上午9:00",
             duration = "1小时",
-            attendees = null
+            attendees = nil
         }
     },
     {
@@ -85,7 +85,7 @@ local testCases = {
             title = "和王老师讨论论文",
             time = "下午14:00",
             duration = "1小时",
-            attendees = null
+            attendees = nil
         }
     },
     {
@@ -95,7 +95,7 @@ local testCases = {
             title = "在会议室A开会",
             time = "15:00",
             duration = "2小时",
-            attendees = null
+            attendees = nil
         }
     },
     {
@@ -105,7 +105,7 @@ local testCases = {
             title = "参加产品评审会议",
             time = "10:00",
             duration = "1小时",
-            attendees = null
+            attendees = nil
         }
     }
 }
