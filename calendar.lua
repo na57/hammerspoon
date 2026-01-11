@@ -164,63 +164,99 @@ end
 
 -- 创建日历事件
 local function createCalendarEvent(eventData, originalText)
-    -- 格式化日期时间字符串（用于AppleScript）
-    local function formatDateTime(timestamp)
-        -- 使用标准日期格式：YYYY-MM-DD HH:MM:SS
-        return os.date("%Y-%m-%d %H:%M:%S", timestamp)
+    -- 测试 AppleScript 是否可用
+    local function testAppleScript()
+        local testScript = [[tell application "Calendar"
+            activate
+        end tell]]
+        local success, result = hs.osascript.applescript(testScript)
+        return success, result
     end
     
     -- 转义 AppleScript 字符串
     local function escapeAppleScriptString(str)
         if not str then return "" end
-        -- 转义特殊字符
-        str = str:gsub("\\", "\\\\")  -- 反斜杠
+        -- 转义双引号并移除所有回车符
         str = str:gsub('"', '\\"')    -- 双引号
-        str = str:gsub("\n", "\\n")   -- 换行符
-        str = str:gsub("\r", "\\r")   -- 回车符
-        str = str:gsub("\t", "\\t")   -- 制表符
+        str = str:gsub('\n', '')        -- 移除回车符
+        str = str:gsub('\r', '')        -- 移除回车符
         return str
     end
     
-    -- 验证时间戳
-    local startTime = tonumber(eventData.start_time)
-    local endTime = tonumber(eventData.end_time)
+    -- 验证时间字符串
+    local startTimeStr = eventData.start_time
+    local endTimeStr = eventData.end_time
     
-    if not startTime or not endTime then
+    if not startTimeStr or not endTimeStr then
         showResult("无法解析事件时间", false)
         return false
     end
     
+    print("[调试] 开始时间字符串:", startTimeStr)
+    print("[调试] 结束时间字符串:", endTimeStr)
+    
     -- 构建日历事件参数
     local eventParams = {
         summary = eventData.title or "未命名事件",
-        description = "原始文本：" .. originalText .. "\n\n" .. (eventData.description or ""),
+        description = eventData.description or "", -- 直接使用LLM输出的description
         location = eventData.location
     }
     
     -- 使用AppleScript创建日历事件（因为Hammerspoon的日历API有限）
-    local appleScript = 'tell application "Calendar"\n'
-    appleScript = appleScript .. 'set newEvent to make new event at end of events of calendar "' .. escapeAppleScriptString(config.default_calendar) .. '"\n'
-    appleScript = appleScript .. 'set summary of newEvent to "' .. escapeAppleScriptString(eventParams.summary) .. '"\n'
-    appleScript = appleScript .. 'set start date of newEvent to date "' .. escapeAppleScriptString(formatDateTime(startTime)) .. '"\n'
-    appleScript = appleScript .. 'set end date of newEvent to date "' .. escapeAppleScriptString(formatDateTime(endTime)) .. '"\n'
-    appleScript = appleScript .. 'set description of newEvent to "' .. escapeAppleScriptString(eventParams.description) .. '"\n'
+    local appleScript = "tell application \"Calendar\"\n"
     
+    -- 逐个添加命令，确保每个命令都在单独的行上
+    appleScript = appleScript .. "        set newEvent to make new event at end of events of calendar \"" .. escapeAppleScriptString(config.default_calendar) .. "\"\n"
+    appleScript = appleScript .. "        set summary of newEvent to \"" .. escapeAppleScriptString(eventParams.summary) .. "\"\n"
+    appleScript = appleScript .. "        set start date of newEvent to date \"" .. escapeAppleScriptString(startTimeStr) .. "\"\n"
+    appleScript = appleScript .. "        set end date of newEvent to date \"" .. escapeAppleScriptString(endTimeStr) .. "\"\n"
+    appleScript = appleScript .. "        set description of newEvent to \"" .. escapeAppleScriptString(eventParams.description) .. "\"\n"
+    
+    -- 添加location（如果有）
     if eventParams.location then
-        appleScript = appleScript .. 'set location of newEvent to "' .. escapeAppleScriptString(eventParams.location) .. '"\n'
+        appleScript = appleScript .. "        set location of newEvent to \"" .. escapeAppleScriptString(eventParams.location) .. "\"\n"
     end
     
-    appleScript = appleScript .. 'save newEvent\n'
-    appleScript = appleScript .. 'end tell'
+    -- 添加save命令和结束语句
+    appleScript = appleScript .. "        save newEvent\n"
+    appleScript = appleScript .. "    end tell"
     
-    -- 执行AppleScript
-    local success, result = hs.applescript(appleScript)
-    if success then
-        showResult("日历事件创建成功", true)
-        return true
+    -- 调试信息：打印生成的 AppleScript
+    print("[调试] 生成的 AppleScript:")
+    print(appleScript)
+    
+    -- 先测试 AppleScript 是否可用
+    print("[调试] 测试 AppleScript 连接...")
+    local testSuccess, testResult = testAppleScript()
+    if not testSuccess then
+        print("[调试] AppleScript 连接失败:", testResult)
+        showResult("无法连接到日历应用：" .. (testResult or "未知错误"), false)
+        return false
+    end
+    
+    -- 执行AppleScript（使用 os.execute 获得更详细的错误信息）
+    local tempFile = "/tmp/hammerspoon_calendar.scpt"
+    local f = io.open(tempFile, "w")
+    if f then
+        f:write(appleScript)
+        f:close()
+        
+        local cmd = 'osascript "' .. tempFile .. '" 2>&1'
+        local handle = io.popen(cmd)
+        local output = handle:read("*a")
+        local exitCode = handle:close()
+        
+        if exitCode == 0 then
+            showResult("日历事件创建成功", true)
+            return true
+        else
+            print("[调试] AppleScript 执行失败，退出码:", exitCode)
+            print("[调试] 错误输出:", output)
+            showResult("日历事件创建失败：" .. (output or "未知错误"), false)
+            return false
+        end
     else
-        local errorMsg = result or "未知错误"
-        showResult("日历事件创建失败：" .. errorMsg, false)
+        showResult("无法创建临时文件", false)
         return false
     end
 end

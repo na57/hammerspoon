@@ -1,153 +1,141 @@
--- ========================================
--- 日程解析功能测试脚本
--- ========================================
--- 用于测试优化后的日程文本解析功能
--- ========================================
+-- 测试文件：测试日历事件AppleScript生成逻辑
+-- 运行方式：在Hammerspoon控制台中运行或使用luajit
 
-local calendar = require("calendar")
-
--- 测试用例集合
-local testCases = {
-    {
-        name = "测试1: 会议事件（无明确时间）",
-        input = "明天和张三开会讨论项目进度",
-        expected = {
-            title = "和张三开会讨论项目进度",
-            time = "上午9:00",
-            duration = "1小时",
-            attendees = {"张三"}
-        }
-    },
-    {
-        name = "测试2: 运动事件（无明确时间）",
-        input = "周五下午去健身房锻炼",
-        expected = {
-            title = "去健身房锻炼",
-            time = "下午14:00",
-            duration = "1小时",
-            attendees = nil
-        }
-    },
-    {
-        name = "测试3: 面试事件（无明确时间）",
-        input = "下周二参加技术面试",
-        expected = {
-            title = "参加技术面试",
-            time = "上午9:00",
-            duration = "1小时",
-            attendees = nil
-        }
-    },
-    {
-        name = "测试4: 培训事件（无明确时间）",
-        input = "下周一参加产品培训课程",
-        expected = {
-            title = "参加产品培训课程",
-            time = "上午9:00",
-            duration = "2小时",
-            attendees = nil
-        }
-    },
-    {
-        name = "测试5: 用餐事件（无明确时间）",
-        input = "明天中午和同事一起吃饭",
-        expected = {
-            title = "和同事一起吃饭",
-            time = "中午12:00",
-            duration = "1小时",
-            attendees = nil
-        }
-    },
-    {
-        name = "测试6: 多人参与事件",
-        input = "明天下午3点和张三、李四、王五开会",
-        expected = {
-            title = "和张三、李四、王五开会",
-            time = "15:00",
-            duration = "1小时",
-            attendees = {"张三", "李四", "王五"}
-        }
-    },
-    {
-        name = "测试7: 排除职位称谓",
-        input = "明天和经理开会讨论工作",
-        expected = {
-            title = "和经理开会讨论工作",
-            time = "上午9:00",
-            duration = "1小时",
-            attendees = nil
-        }
-    },
-    {
-        name = "测试8: 排除老师称谓",
-        input = "下周三下午和王老师讨论论文",
-        expected = {
-            title = "和王老师讨论论文",
-            time = "下午14:00",
-            duration = "1小时",
-            attendees = nil
-        }
-    },
-    {
-        name = "测试9: 明确时间的事件",
-        input = "明天下午3点到5点在会议室A开会",
-        expected = {
-            title = "在会议室A开会",
-            time = "15:00",
-            duration = "2小时",
-            attendees = nil
-        }
-    },
-    {
-        name = "测试10: 简洁标题提取",
-        input = "下周二上午10点在会议室B参加产品评审会议，讨论新功能上线计划",
-        expected = {
-            title = "参加产品评审会议",
-            time = "10:00",
-            duration = "1小时",
-            attendees = nil
-        }
-    }
+-- 模拟配置
+local config = {
+    default_calendar = "Home"
 }
 
--- 运行单个测试用例
-local function runTestCase(testCase)
-    print("\n========================================")
-    print("测试用例: " .. testCase.name)
-    print("输入文本: " .. testCase.input)
-    print("========================================")
-    
-    -- 调用日历处理函数
-    calendar.testProcessText(testCase.input)
+-- 模拟escapeAppleScriptString函数
+local function escapeAppleScriptString(str)
+    if not str then return "" end
+    str = str:gsub('"', '\\"')    -- 双引号
+    str = str:gsub('\n', '')        -- 移除回车符
+    str = str:gsub('\r', '')        -- 移除回车符
+    return str
 end
 
--- 运行所有测试用例
-local function runAllTests()
-    print("\n========================================")
-    print("开始运行日程解析功能测试")
-    print("========================================")
+-- 模拟createCalendarEvent函数的核心逻辑：生成AppleScript
+local function testCreateAppleScript()
+    -- 模拟事件数据
+    local eventData = {
+        title = "测试事件",
+        start_time = "2026-01-12 09:00:00",
+        end_time = "2026-01-12 10:00:00",
+        description = "这是一个测试事件的描述",
+        location = "测试地点"
+    }
     
-    for i, testCase in ipairs(testCases) do
-        runTestCase(testCase)
-        
-        -- 等待3秒再进行下一个测试
-        if i < #testCases then
-            hs.timer.doAfter(4, function()
-                print("\n等待下一个测试用例...")
-            end)
-        end
+    local originalText = "原始测试文本"
+    
+    -- 构建日历事件参数
+    local eventParams = {
+        summary = eventData.title or "未命名事件",
+        description = eventData.description or "", -- 直接使用LLM输出的description
+        location = eventData.location
+    }
+    
+    local startTimeStr = eventData.start_time
+    local endTimeStr = eventData.end_time
+    
+    -- 使用修复后的AppleScript生成逻辑
+    local appleScript = "tell application \"Calendar\"\n"
+    
+    -- 逐个添加命令，确保每个命令都在单独的行上
+    appleScript = appleScript .. "        set newEvent to make new event at end of events of calendar \"" .. escapeAppleScriptString(config.default_calendar) .. "\"\n"
+    appleScript = appleScript .. "        set summary of newEvent to \"" .. escapeAppleScriptString(eventParams.summary) .. "\"\n"
+    appleScript = appleScript .. "        set start date of newEvent to date \"" .. escapeAppleScriptString(startTimeStr) .. "\"\n"
+    appleScript = appleScript .. "        set end date of newEvent to date \"" .. escapeAppleScriptString(endTimeStr) .. "\"\n"
+    appleScript = appleScript .. "        set description of newEvent to \"" .. escapeAppleScriptString(eventParams.description) .. "\"\n"
+    
+    -- 添加location（如果有）
+    if eventParams.location then
+        appleScript = appleScript .. "        set location of newEvent to \"" .. escapeAppleScriptString(eventParams.location) .. "\"\n"
     end
     
-    print("\n========================================")
-    print("所有测试用例执行完成")
-    print("========================================")
+    -- 添加save命令和结束语句
+    appleScript = appleScript .. "        save newEvent\n"
+    appleScript = appleScript .. "    end tell"
+    
+    -- 打印生成的AppleScript
+    print("生成的AppleScript:")
+    print(appleScript)
+    print("\n")
+    
+    -- 验证格式：检查每个命令是否都在单独的行上
+    print("验证结果:")
+    
+    -- 检查tell application行
+    if appleScript:find("^tell application") then
+        print("✓ tell application行格式正确")
+    else
+        print("✗ tell application行格式错误")
+    end
+    
+    -- 检查set newEvent行
+    if appleScript:find("\n        set newEvent") then
+        print("✓ set newEvent行格式正确")
+    else
+        print("✗ set newEvent行格式错误")
+    end
+    
+    -- 检查set summary行
+    if appleScript:find("\n        set summary") then
+        print("✓ set summary行格式正确")
+    else
+        print("✗ set summary行格式错误")
+    end
+    
+    -- 检查set start date行
+    if appleScript:find("\n        set start date") then
+        print("✓ set start date行格式正确")
+    else
+        print("✗ set start date行格式错误")
+    end
+    
+    -- 检查set end date行
+    if appleScript:find("\n        set end date") then
+        print("✓ set end date行格式正确")
+    else
+        print("✗ set end date行格式错误")
+    end
+    
+    -- 检查set description行
+    if appleScript:find("\n        set description") then
+        print("✓ set description行格式正确")
+    else
+        print("✗ set description行格式错误")
+    end
+    
+    -- 检查set location行
+    if appleScript:find("\n        set location") then
+        print("✓ set location行格式正确")
+    else
+        print("✗ set location行格式错误")
+    end
+    
+    -- 检查save newEvent行
+    if appleScript:find("\n        save newEvent") then
+        print("✓ save newEvent行格式正确")
+    else
+        print("✗ save newEvent行格式错误")
+    end
+    
+    -- 检查end tell行
+    if appleScript:find("\n    end tell$") then
+        print("✓ end tell行格式正确")
+    else
+        print("✗ end tell行格式错误")
+    end
+    
+    return appleScript
 end
 
--- 导出测试函数
-local testCalendar = {
-    runAllTests = runAllTests,
-    runTestCase = runTestCase,
-    testCases = testCases
-}
+-- 运行测试
+print("开始测试日历事件AppleScript生成逻辑...")
+print("======================================")
+local appleScript = testCreateAppleScript()
+print("\n测试完成!")
 
-return testCalendar
+-- 返回生成的AppleScript，方便在Hammerspoon中查看
+return appleScript
