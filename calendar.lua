@@ -89,15 +89,7 @@ local function showLoading(show)
     if show then
         -- 显示新的加载提示
         -- 使用定时器在3秒后关闭提示
-        calendar.loadingAlertID = hs.alert.show("正在处理，请稍候...", "informational")
-        
-        -- 3秒后自动关闭
-        hs.timer.doAfter(3, function()
-            if calendar.loadingAlertID then
-                hs.alert.closeSpecific(calendar.loadingAlertID)
-                calendar.loadingAlertID = nil
-            end
-        end)
+        calendar.loadingAlertID = hs.alert.show("正在处理，请稍候...", nil, nil, 3)
     end
 end
 
@@ -108,11 +100,13 @@ local function showResult(message, isSuccess)
         message = tostring(message)
     end
     
-    -- hs.alert.show的正确用法：hs.alert.show(str, [style], [screen], [seconds])
-    -- 参数顺序：message, style, screen, seconds
-    -- 注意：seconds参数可能不起作用，需要使用定时器手动关闭
-    local style = isSuccess and "success" or "critical"
-    local alertID = hs.alert.show(message, style)
+    -- hs.alert.show的正确用法：hs.alert.show(str, [style_table], [screen], [seconds])
+    -- 参数说明：
+    --   str: 要显示的消息字符串
+    --   style_table: 可选，包含样式属性的table（不是字符串）
+    --   screen: 可选，要显示在哪个屏幕上
+    --   seconds: 可选，显示持续时间（秒）
+    local alertID = hs.alert.show(message, nil, nil, 3)
     
     -- 使用定时器在3秒后关闭提示
     hs.timer.doAfter(3, function()
@@ -384,12 +378,7 @@ local function createInputDialog()
             processCalendarText(textClicked)
         else
             print("[调试] 输入文本为空，不处理")
-            local alertID = hs.alert.show("请输入日程信息", "warning")
-            
-            -- 2秒后自动关闭
-            hs.timer.doAfter(2, function()
-                hs.alert.closeSpecific(alertID)
-            end)
+            local alertID = hs.alert.show("请输入日程信息", nil, nil, 2)
         end
     else
         print("[调试] 用户点击了取消按钮或关闭了对话框")
