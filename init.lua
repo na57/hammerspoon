@@ -16,10 +16,12 @@ local hyper = {"cmd", "shift", "alt"}
 -- window.lua  - 窗口管理（全屏切换）
 -- icloud.lua  - iCloud文件管理（移动文件到iCloud）
 -- mouse.lua   - 鼠标控制（随机移动鼠标）
+-- calendar.lua - 文本提取日历日程创建
 local display = require("display")
 local window = require("window")
 local icloud = require("icloud")
 local mouse = require("mouse")
+local calendar = require("calendar")
 
 -- ========================================
 -- 快捷键配置
@@ -58,6 +60,13 @@ hs.hotkey.bind(hyper, "5", mouse.startMouseMovement)
 -- 停止鼠标随机移动
 -- 快捷键：Hyper + 6
 hs.hotkey.bind(hyper, "6", mouse.stopMouseMovement)
+
+-- 文本提取日历日程创建
+-- 快捷键：Hyper + C
+hs.hotkey.bind(hyper, "C", calendar.showInputDialog)
+
+-- 初始化日历模块
+calendar.init()
 
 -- ========================================
 -- 配置加载完成提示
