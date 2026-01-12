@@ -190,6 +190,11 @@ download_and_verify() {
     echo "$zip_file"
 }
 
+# 获取当前日期，格式为yyyymmdd
+get_current_date() {
+    date +"%Y%m%d"
+}
+
 # 安装配置文件
 install_config() {
     local zip_file=$1
@@ -225,6 +230,34 @@ install_config() {
     done
     
     print_color "blue" "🔧 正在安装配置文件到 $HAMMERSPOON_DIR..."
+    
+    # 检查config.lua是否已存在
+    local config_file="$HAMMERSPOON_DIR/config.lua"
+    local backup_file=""
+    
+    if [ -f "$config_file" ]; then
+        # 获取当前日期
+        local current_date=$(get_current_date)
+        backup_file="${config_file}.${current_date}"
+        
+        # 询问用户是否备份
+        print_color "yellow" "⚠️  检测到已存在config.lua文件，是否备份？"
+        read -p "请输入 y/n (默认: y): " backup_choice
+        backup_choice=${backup_choice:-y}
+        
+        if [ "$backup_choice" = "y" ] || [ "$backup_choice" = "Y" ]; then
+            # 执行备份
+            if ! cp "$config_file" "$backup_file" 2>/dev/null; then
+                # 尝试使用sudo权限
+                print_color "yellow" "⚠️  普通权限备份失败，尝试使用sudo权限..."
+                if ! sudo cp "$config_file" "$backup_file"; then
+                    error_exit "备份config.lua失败" "请检查您的权限或手动备份文件"
+                fi
+                sudo chown "$USER":"$GROUP" "$backup_file"
+            fi
+            print_color "green" "✅ 已将config.lua备份到 $backup_file"
+        fi
+    fi
     
     # 复制文件，处理权限问题
     if ! cp -r "$extracted_dir"/*.lua "$HAMMERSPOON_DIR" 2>/dev/null; then
