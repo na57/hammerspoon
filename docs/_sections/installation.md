@@ -20,11 +20,21 @@
 curl -fsSL https://raw.githubusercontent.com/na57/hammerspoon/pages/install.sh | bash
 ```
 
+**使用 wget：**
+```bash
+wget -O- https://raw.githubusercontent.com/na57/hammerspoon/pages/install.sh | bash
+```
+
 **特殊权限场景：**
 
 **使用 curl：**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/na57/hammerspoon/pages/install.sh | sudo bash -s -- -u $(whoami)
+```
+
+**使用 wget：**
+```bash
+wget -O- https://raw.githubusercontent.com/na57/hammerspoon/pages/install.sh | sudo bash -s -- -u $(whoami)
 ```
 
 #### 2. 手动安装（可选）
