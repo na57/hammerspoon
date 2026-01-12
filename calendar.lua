@@ -23,7 +23,7 @@ local system_prompt = [[你是一个专业的日历日程信息提取助手。�
 }
 
 【时间计算规则】
-- 计算时请使用当前日期作为基准
+- 计算时请使用当前时间 {current_time} 作为基准
 - 对于相对日期（如"明天"、"下周一"），请转换为具体的日期
 - 时区必须使用{time_zone}（UTC+8）
 - 时间格式必须使用24小时制，格式为YYYY-MM-DD HH:MM:SS
@@ -123,10 +123,7 @@ local function callOpenAIAPI(text, callback)
     local requestBody = {
         model = config.model,
         messages = {
-            {
-                role = "system",
-                content = system_prompt:gsub("{time_zone}", config.time_zone)
-            },
+            {                role = "system",                content = system_prompt:gsub("{time_zone}", config.time_zone):gsub("{current_time}", os.date("%Y-%m-%d %H:%M:%S"))            },
             {
                 role = "user",
                 content = text
