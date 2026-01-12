@@ -11,14 +11,18 @@
 
 #### 1. 自动安装（推荐）
 
-**特别注意**：安装时会提示您备份已有的配置文件（`~/.hammerspoon/config.lua`），其他文件会直接覆盖。如果您有其他配置文件，请先备份。
+**特别注意**： 安装时会提示您备份已有的配置文件（`~/.hammerspoon/config.lua`），其他文件会直接覆盖。如果您有其他配置文件，请先备份。
 
 使用自动化脚本一键安装最新版本：
+
+**使用 curl：**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/na57/hammerspoon/pages/install.sh | bash
 ```
 
 **特殊权限场景：**
+
+**使用 curl：**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/na57/hammerspoon/pages/install.sh | sudo bash -s -- -u $(whoami)
 ```

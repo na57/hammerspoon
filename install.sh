@@ -240,10 +240,17 @@ install_config() {
         local current_date=$(get_current_date)
         backup_file="${config_file}.${current_date}"
         
-        # 询问用户是否备份
-        print_color "yellow" "⚠️  检测到已存在config.lua文件，是否备份？"
-        read -p "请输入 y/n (默认: y): " backup_choice
-        backup_choice=${backup_choice:-y}
+        # 检查是否为交互式环境
+        if [ -t 0 ]; then
+            # 交互式环境：询问用户是否备份
+            print_color "yellow" "⚠️  检测到已存在config.lua文件，是否备份？"
+            read -p "请输入 y/n (默认: y): " backup_choice
+            backup_choice=${backup_choice:-y}
+        else
+            # 非交互式环境（如管道执行）：默认备份
+            print_color "yellow" "⚠️  检测到已存在config.lua文件，自动备份..."
+            backup_choice="y"
+        fi
         
         if [ "$backup_choice" = "y" ] || [ "$backup_choice" = "Y" ]; then
             # 执行备份
@@ -253,7 +260,7 @@ install_config() {
                 if ! sudo cp "$config_file" "$backup_file"; then
                     error_exit "备份config.lua失败" "请检查您的权限或手动备份文件"
                 fi
-                sudo chown "$USER":"$GROUP" "$backup_file"
+                sudo chown "$USER_NAME":"$GROUP_NAME" "$backup_file"
             fi
             print_color "green" "✅ 已将config.lua备份到 $backup_file"
         fi

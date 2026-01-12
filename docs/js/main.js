@@ -191,7 +191,13 @@ document.addEventListener('DOMContentLoaded', function() {
         pre.appendChild(button);
         
         button.addEventListener('click', function() {
-            navigator.clipboard.writeText(block.textContent).then(() => {
+            // 提取纯代码内容，去除行号
+            let codeContent = block.textContent;
+            
+            // 处理带有行号的情况：删除每行开头的数字和空格
+            codeContent = codeContent.replace(/^\s*\d+\s+/gm, '');
+            
+            navigator.clipboard.writeText(codeContent).then(() => {
                 button.textContent = '已复制!';
                 setTimeout(() => {
                     button.textContent = '复制';
