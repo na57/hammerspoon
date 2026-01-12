@@ -23,7 +23,7 @@ local system_prompt = [[你是一个专业的日历日程信息提取助手。�
 }
 
 【时间计算规则】
-- 计算时请使用当前日期作为基准
+- 计算时请使用当前时间 {current_time} 作为基准
 - 对于相对日期（如"明天"、"下周一"），请转换为具体的日期
 - 时区必须使用{time_zone}（UTC+8）
 - 时间格式必须使用24小时制，格式为YYYY-MM-DD HH:MM:SS
@@ -88,16 +88,8 @@ local function showLoading(show)
     
     if show then
         -- 显示新的加载提示
-        -- 使用定时器在3秒后关闭提示
-        calendar.loadingAlertID = hs.alert.show("正在处理，请稍候...", "informational")
-        
-        -- 3秒后自动关闭
-        hs.timer.doAfter(3, function()
-            if calendar.loadingAlertID then
-                hs.alert.closeSpecific(calendar.loadingAlertID)
-                calendar.loadingAlertID = nil
-            end
-        end)
+        -- 显示加载提示，不设置自动关闭时间，直到API调用结束
+        calendar.loadingAlertID = hs.alert.show("正在处理，请稍候...")
     end
 end
 
@@ -108,11 +100,13 @@ local function showResult(message, isSuccess)
         message = tostring(message)
     end
     
-    -- hs.alert.show的正确用法：hs.alert.show(str, [style], [screen], [seconds])
-    -- 参数顺序：message, style, screen, seconds
-    -- 注意：seconds参数可能不起作用，需要使用定时器手动关闭
-    local style = isSuccess and "success" or "critical"
-    local alertID = hs.alert.show(message, style)
+    -- hs.alert.show的正确用法：hs.alert.show(str, [style_table], [screen], [seconds])
+    -- 参数说明：
+    --   str: 要显示的消息字符串
+    --   style_table: 可选，包含样式属性的table（不是字符串）
+    --   screen: 可选，要显示在哪个屏幕上
+    --   seconds: 可选，显示持续时间（秒）
+    local alertID = hs.alert.show(message, nil, nil, 3)
     
     -- 使用定时器在3秒后关闭提示
     hs.timer.doAfter(3, function()
@@ -129,10 +123,7 @@ local function callOpenAIAPI(text, callback)
     local requestBody = {
         model = config.model,
         messages = {
-            {
-                role = "system",
-                content = system_prompt:gsub("{time_zone}", config.time_zone)
-            },
+            {                role = "system",                content = system_prompt:gsub("{time_zone}", config.time_zone):gsub("{current_time}", os.date("%Y-%m-%d %H:%M:%S"))            },
             {
                 role = "user",
                 content = text
@@ -384,12 +375,7 @@ local function createInputDialog()
             processCalendarText(textClicked)
         else
             print("[调试] 输入文本为空，不处理")
-            local alertID = hs.alert.show("请输入日程信息", "warning")
-            
-            -- 2秒后自动关闭
-            hs.timer.doAfter(2, function()
-                hs.alert.closeSpecific(alertID)
-            end)
+            local alertID = hs.alert.show("请输入日程信息", nil, nil, 2)
         end
     else
         print("[调试] 用户点击了取消按钮或关闭了对话框")
