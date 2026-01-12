@@ -88,8 +88,8 @@ local function showLoading(show)
     
     if show then
         -- 显示新的加载提示
-        -- 使用定时器在3秒后关闭提示
-        calendar.loadingAlertID = hs.alert.show("正在处理，请稍候...", nil, nil, 3)
+        -- 显示加载提示，不设置自动关闭时间，直到API调用结束
+        calendar.loadingAlertID = hs.alert.show("正在处理，请稍候...")
     end
 end
 
