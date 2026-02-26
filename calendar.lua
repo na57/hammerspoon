@@ -23,13 +23,16 @@ local system_prompt = [[你是一个专业的日历日程信息提取助手。�
 }
 
 【时间计算规则】
-- 计算时请使用当前时间 {current_time} 作为基准
-- 对于相对日期（如"明天"、"下周一"），请转换为具体的日期
+- 当前时间是 {current_time}（包括年份信息），这是你计算所有日期的基准
+- 对于相对日期（如"明天"、"下周一"、"这周末"），请基于当前时间 {current_time} 转换为具体的日期
+- 【重要】如果用户提到的日期没有包含年份（如"1月15日"、"3月5号"），一律使用当前年份 {current_year}
 - 时区必须使用{time_zone}（UTC+8）
 - 时间格式必须使用24小时制，格式为YYYY-MM-DD HH:MM:SS
-- 示例（使用 Asia/Shanghai 时区，UTC+8）：
-  * 2026年1月13日 09:00:00 (北京时间，下周一) → start_time: "2026-01-13 09:00:00"
-  * 2026年1月13日 10:00:00 (北京时间) → end_time: "2026-01-13 10:00:00"
+- 示例（使用 Asia/Shanghai 时区，UTC+8，当前时间是2026年2月26日）：
+  * "下周一" → 2026年2月23日（周一）
+  * "1月15日开会" → 2026-01-15（使用当前年份2026年）
+  * "3月5号去旅游" → 2026-03-05（使用当前年份2026年）
+  * "明年1月1日" → 2027-01-01（明确说了"明年"，所以是2027年）
 
 【事件标题提取规则】
 - 标题必须极度简洁，只保留最核心的1-5个关键词
@@ -123,7 +126,7 @@ local function callOpenAIAPI(text, callback)
     local requestBody = {
         model = config.model,
         messages = {
-            {                role = "system",                content = system_prompt:gsub("{time_zone}", config.time_zone):gsub("{current_time}", os.date("%Y-%m-%d %H:%M:%S"))            },
+            {                role = "system",                content = system_prompt:gsub("{time_zone}", config.time_zone):gsub("{current_time}", os.date("%Y-%m-%d %H:%M:%S")):gsub("{current_year}", os.date("%Y"))            },
             {
                 role = "user",
                 content = text
